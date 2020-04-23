@@ -2,14 +2,25 @@
 to carry out the profiling of python functions"""
 
 import logging 
+import os
 
 from Octopus.tracing import decorators
+from Octopus.tracing import helpers
 
 logger = logging.getLogger('octopus.tracing')
+
+ENABLE_OCTOPUS = os.environ.get('ENABLE_OCTOPUS', 'false').lower() in ['true', 't']
+
 
 def profiled_instance(obj: object, exclusions: list = []):
     """Helper function used to apply decorator to instance
     of an object/class"""
+    
+    # only apply octopus if environment variable configured to true
+    if not ENABLE_OCTOPUS:
+        logger.warning('octopus tracing is disabled')
+        
+        return obj
     
     def is_magic_method(func: str) -> bool:
         """Closure used to determine if a method is magic"""
@@ -19,9 +30,9 @@ def profiled_instance(obj: object, exclusions: list = []):
     # get all methods that belong to instance and fillter on magic methods
     methods = [func for func in dir(obj) if callable(getattr(obj, func)) and not is_magic_method(func)]
     
-    logger.info('Applying Jaeger Tracing to functions %s', ','.join(methods))
+    logger.info('applying octopus tracing to functions %s', ','.join(methods))
     
-    for method in methods:
+    for method in helpers.filter_methods('', methods):
         setattr(obj, method, decorators.profiled_method(getattr(obj, method)))
-    
+        
     return obj

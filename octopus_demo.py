@@ -1,13 +1,16 @@
 
+import logging 
+
+logging.basicConfig(level=logging.DEBUG)
+
+logging.getLogger('octopus').setLevel(level=logging.DEBUG)
+logging.getLogger('jaeger_tracing').setLevel(level=logging.ERROR)
+
 import time
 import random
 import os 
 
 from Octopus.tracing import octopus
-
-os.environ['JAEGER_HOST'] = 'localhost'
-os.environ['JAEGER_PORT'] = '6831'
-os.environ['SERVICE_NAME'] = 'test'
 
 class Test:
     def foo(self):
@@ -35,7 +38,9 @@ class TestChild(Test):
         return 'bar_foo'
     
 
-test = octopus.profiled_instance(TestChild())
+test = TestChild()
+
+octopus.profiled_instance(test)
 
 for i in range(5):
 
