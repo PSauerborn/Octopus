@@ -50,10 +50,10 @@ def filter_methods(methods: list) -> list:
     user in the environment variables"""
     
     if OCTOPUS_INCLUSION_PATTERNS:
-        methods = filter_on_inclusion(expressions, methods)
+        methods = filter_on_inclusion(OCTOPUS_INCLUSION_PATTERNS, methods)
         
-    else if OCTOPUS_EXCLUSION_PATTERNS:
-        methods = filter_on_exclusion(expressions, methods)        
+    elif OCTOPUS_EXCLUSION_PATTERNS:
+        methods = filter_on_exclusion(OCTOPUS_EXCLUSION_PATTERNS, methods)        
             
     return methods
 

@@ -32,7 +32,7 @@ def profiled_instance(obj: object, exclusions: list = []):
     
     logger.info('applying octopus tracing to functions %s', ','.join(methods))
     
-    for method in helpers.filter_methods('', methods):
-        setattr(obj, method, decorators.profiled_method(getattr(obj, method)))
+    for method in methods:
+        setattr(obj, method, decorators.profiled_method(obj.__class__.__name__)(getattr(obj, method)))
         
     return obj

@@ -9,36 +9,39 @@ from Octopus.tracing import jaeger
 logger = logging.getLogger('octopus.decorators')
 
 
-def profiled_method(func: object):
+def profiled_method(class_name: str):
     """Basic decorator used to profile a method call"""
-    def wrapper(*args: tuple, **kwargs: dict):
-        
-        parent_scope = jaeger.get_active_scope()
-        
-        if parent_scope:
+    
+    def make_wrapper(func: object):
+        def wrapper(*args: tuple, **kwargs: dict):
             
-            logger.debug('Using active parent scope to trace')
+            parent_scope = jaeger.get_active_scope()
             
-            with jaeger.TRACER.start_active_span(func.__name__, child_of=parent_scope.span) as scope:
+            if parent_scope:
                 
-                scope.span.set_tag('start_timestamp', datetime.datetime.utcnow().isoformat())
+                logger.debug('Using active parent scope to trace')
                 
-                result = func(*args, **kwargs)
+                with jaeger.TRACER.start_active_span(f'{class_name} - {func.__name__}', child_of=parent_scope.span) as scope:
+                    
+                    scope.span.set_tag('start_timestamp', datetime.datetime.utcnow().isoformat())
+                    
+                    result = func(*args, **kwargs)
+                    
+                    scope.span.set_tag('finish_timestamp', datetime.datetime.utcnow().isoformat())
+            else:
                 
-                scope.span.set_tag('finish_timestamp', datetime.datetime.utcnow().isoformat())
-        else:
-            
-            logger.debug('Creating new scope for tracing')
-            
-            with jaeger.TRACER.start_active_span(func.__name__) as scope:
+                logger.debug('Creating new scope for tracing')
                 
-                scope.span.set_tag('start_timestamp', datetime.datetime.utcnow().isoformat())
+                with jaeger.TRACER.start_active_span(f'{class_name} - {func.__name__}') as scope:
+                    
+                    scope.span.set_tag('start_timestamp', datetime.datetime.utcnow().isoformat())
+                    
+                    result = func(*args, **kwargs)
+                    
+                    scope.span.set_tag('finish_timestamp', datetime.datetime.utcnow().isoformat())
                 
-                result = func(*args, **kwargs)
-                
-                scope.span.set_tag('finish_timestamp', datetime.datetime.utcnow().isoformat())
-            
-        return result
-    return wrapper 
+            return result
+        return wrapper
+    return make_wrapper 
 
 
