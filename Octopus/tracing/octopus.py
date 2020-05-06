@@ -10,7 +10,7 @@ from Octopus.tracing import helpers
 logger = logging.getLogger('octopus.tracing')
 
 ENABLE_OCTOPUS = os.environ.get('ENABLE_OCTOPUS', 'false').lower() in ['true', 't']
-
+DIRECT_OMISSIONS = os.environ.get('OCTOPUS_DIRECT_OMISSIONS').split(',')
 
 def profiled_instance(obj: object, exclusions: list = []):
     """Helper function used to apply decorator to instance
@@ -33,6 +33,7 @@ def profiled_instance(obj: object, exclusions: list = []):
     logger.info('applying octopus tracing to functions %s', ','.join(methods))
     
     for method in methods:
-        setattr(obj, method, decorators.profiled_method(obj.__class__.__name__)(getattr(obj, method)))
+        if method not in DIRECT_OMISSIONS:
+            setattr(obj, method, decorators.profiled_method(obj.__class__.__name__)(getattr(obj, method)))
         
     return obj

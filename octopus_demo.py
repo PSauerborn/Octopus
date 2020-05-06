@@ -10,6 +10,8 @@ import time
 import random
 import os 
 
+os.environ['OCTOPUS_DIRECT_OMISSIONS'] = 'listen'
+
 from Octopus.tracing import octopus
 
 class Test:
@@ -37,13 +39,17 @@ class TestChild(Test):
         
         return 'bar_foo'
     
+    def listen(self):
+        
+        for i in range(5):
+            
+            test.bar_foo()
+
+            test.foo_bar()
+    
 
 test = TestChild()
 
 octopus.profiled_instance(test)
 
-for i in range(5):
-
-    test.bar_foo()
-
-    test.foo_bar()
+test.listen()
