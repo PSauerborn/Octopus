@@ -11,6 +11,7 @@ import random
 import os 
 
 os.environ['OCTOPUS_DIRECT_OMISSIONS'] = 'listen'
+os.environ['OCTOPUS_DIRECT_OMISSIONS
 
 from Octopus.tracing import octopus
 
