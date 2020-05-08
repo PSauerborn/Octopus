@@ -12,13 +12,12 @@ LOGGER = logging.getLogger('octopus.metrics.plugin')
 
 class OctopusTracing:
     """
-    Enerlytics SDK Bottle plugin for API
-    Tracing. All tracing is done via the opentracing
-    standard with a Backend Jaeger Service to 
-    collect and aggregate the traces. Note that
-    the Tracing Plugin should be applied last to ensure
-    that all routes that have been added by other plugins
-    are traced
+    Bottle plugin for the Octopus Plugin, which utilized both
+    the Jaeger Tracing and Prometheus Metrics plugin to add
+    distributed tracing to any bottle Application. Note that
+    the Jaeger Tracing requires a working Jaeger Setup and the 
+    Prometheus Metrics plugin requires a Prometheus Server to 
+    scrape data
     
     Arguments:
         jaeger_config: dict containing jaeger_host, jaeger_port,

@@ -1,5 +1,5 @@
 """Module containing request functions used to make traced requests.
-All requests are made over the Python rquests library; if tracing
+All requests are made over the Python requests library; if tracing
 has been enabled in the Environment Variables, then the call is 
 traced. If not, the Python requests function is evaluated as normal"""
 

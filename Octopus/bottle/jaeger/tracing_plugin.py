@@ -1,5 +1,7 @@
 """Module containing the API Tracing plugin. Plugins can
-be installed using the bottle.install() method"""
+be installed using the bottle.install() method. The plugin
+implements the OpenTracing standard via the Jaeger Tracing
+framework"""
 
 
 import bottle
@@ -9,10 +11,8 @@ from Octopus.bottle.jaeger.jaeger_config import ENABLE_JAEGER_TRACING
 
 
 class JaegerTracing:
-    """
-    Enerlytics SDK Bottle plugin for API
-    Tracing. All tracing is done via the opentracing
-    standard with a Backend Jaeger Service to 
+    """Bottle plugin for API Tracing. All tracing is done via the 
+    opentracing standard with a Backend Jaeger Service to 
     collect and aggregate the traces. Note that
     the Tracing Plugin should be applied last to ensure
     that all routes that have been added by other plugins
