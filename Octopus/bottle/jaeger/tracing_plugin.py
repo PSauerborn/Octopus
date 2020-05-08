@@ -5,10 +5,17 @@ framework"""
 
 
 import bottle
+import pydantic
 
 from Octopus.bottle.jaeger import tracing
 from Octopus.bottle.jaeger.jaeger_config import ENABLE_JAEGER_TRACING
 
+class JaegerConfig(pydantic.BaseModel):
+    """Dataclass used to encapsulate the config settings
+    used by the prometheus plugin"""
+    
+    jaeger_host: int 
+    jaeger_port: str
 
 class JaegerTracing:
     """Bottle plugin for API Tracing. All tracing is done via the 
@@ -25,7 +32,14 @@ class JaegerTracing:
     
     def __init__(self, jaeger_config: dict = None):
         
-        pass
+        if jaeger_config is not None:
+            try:
+                config = JaegerConfig(**jaeger_config)
+                
+            except pydantic.ValidationError as err:
+                LOGGER.exception(err)
+                
+                raise RuntimeError('received invalid config dict for jaeger plugin')
     
     def setup(self, app: bottle.Bottle):
         """

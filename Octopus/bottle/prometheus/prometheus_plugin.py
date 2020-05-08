@@ -32,7 +32,7 @@ class PrometheusConfig(pydantic.BaseModel):
     """Dataclass used to encapsulate the config settings
     used by the prometheus plugin"""
     
-    metrics: typing.List[str]
+    metrics: typing.List[str] = ['latency', 'request_count', 'processing_requests']
     
 class PrometheusPlugin:
     """Bottle Plugin classed used to add the 
@@ -40,10 +40,10 @@ class PrometheusPlugin:
     
     _config = None
     
-    def __init__(self, config: dict):
+    def __init__(self, prometheus_config: dict):
         
         try:
-            self._config = PrometheusConfig(**config)
+            self._config = PrometheusConfig(**prometheus_config)
             
         except pydantic.ValidationError as err:
             LOGGER.exception(err)

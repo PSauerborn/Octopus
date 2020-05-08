@@ -24,9 +24,9 @@ class OctopusTracing:
             service name and module name variables
     """
     
-    def __init__(self, jaeger_config: dict = None):
+    def __init__(self, prometheus_config: dict = {}, jaeger_config: dict = {}):
         
-        pass
+        self._prometheus_config, self._jaeger_config = prometheus_config, jaeger_config
     
     def setup(self, app: bottle.Bottle):
         """
@@ -49,11 +49,7 @@ class OctopusTracing:
             
             LOGGER.info('adding Prometheus Metric plugin to bottle application')
             
-            prometheus_config = {
-                'metrics': ['latency', 'request_count', 'processing_requests']
-            }
-                    
-            app.install(prometheus_plugin.PrometheusPlugin(prometheus_config))
+            app.install(prometheus_plugin.PrometheusPlugin(self._prometheus_config))
         
         if ENABLE_JAEGER_TRACING:
             from Octopus.bottle.jaeger import tracing_plugin
