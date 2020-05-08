@@ -92,7 +92,7 @@ def get_active_scope() -> object: # pragma: no cover
 
     """
 
-    ENABLE_JAEGER_TRACING:
+    if ENABLE_JAEGER_TRACING:
         return TRACER.scope_manager.active
 
 # create mappings between request methods and string
@@ -239,7 +239,7 @@ def trace(route_name):
     def decorator(func):
         def wrapper(*args, **kwargs):
 
-            logger.debug(f'Starting Trace for {route_name}')
+            LOGGER.debug(f'Starting Trace for {route_name}')
             
             request_method = bottle.request.method 
             
@@ -251,7 +251,7 @@ def trace(route_name):
 
             # if parent exists, use parent span
             if parent:
-                logger.debug('Tracing - Using Parent Span')
+                LOGGER.debug('Tracing - Using Parent Span')
 
                 with TRACER.start_active_span(f'{request_method.upper()} - {route_name}', child_of=parent) as scope:
                     
@@ -268,7 +268,7 @@ def trace(route_name):
 
             # else start new span
             else:
-                logger.debug('Tracing - Creating New Span')
+                LOGGER.debug('Tracing - Creating New Span')
 
                 # create span and evaluate function
                 with TRACER.start_active_span(f'{request_method.upper()} - {route_name}') as scope:

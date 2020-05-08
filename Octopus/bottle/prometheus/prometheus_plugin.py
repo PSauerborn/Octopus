@@ -12,7 +12,7 @@ from Octopus.bottle.prometheus.prometheus_config import ENABLE_PROMETHEUS_METRIC
 
 LOGGER = logging.getLogger('octopus.prometheus.plugin')
 
-if ENABLE_PROMETHEUS:
+if ENABLE_PROMETHEUS_METRICS:
     LOGGER.info('applying prometheus metrics to application')
     
     from Octopus.bottle.prometheus import prometheus_metrics
@@ -61,7 +61,7 @@ class PrometheusPlugin:
             app: instance of bottle.Bottle to apply plugin to
         """
         
-        if not ENABLE_PROMETHEUS:
+        if not ENABLE_PROMETHEUS_METRICS:
             return app
         
         for plugin in app.plugins:
@@ -89,7 +89,7 @@ class PrometheusPlugin:
             callback function wrapped in Promethes Metric decorator
         """
         
-        if not ENABLE_PROMETHEUS:
+        if not ENABLE_PROMETHEUS_METRICS:
             return callback
         
         for metric in self._config.metrics:

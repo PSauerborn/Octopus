@@ -1,0 +1,1 @@
+"""Module used to define config settings used by the octopus plugin"""

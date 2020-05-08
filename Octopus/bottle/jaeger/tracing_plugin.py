@@ -40,7 +40,7 @@ class JaegerTracing:
         
         for plugin in app.plugins:
             # if instance of Tracing plugin has already been installed, raise exception
-            if isinstance(plugin, Tracing):
+            if isinstance(plugin, JaegerTracing):
                 raise RuntimeError('Instance of Tracing Plugin Already Applied to Application')
 
     def apply(self, callback: object, context: bottle.Route):
