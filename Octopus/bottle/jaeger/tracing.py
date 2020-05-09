@@ -14,7 +14,8 @@ import requests
 import bottle
 import jaeger_client
 
-from Octopus.bottle.jaeger.jaeger_config import JAEGER_CONFIG, SERVICE_NAME, ENABLE_JAEGER_TRACING
+# from Octopus.bottle.jaeger.jaeger_config import JAEGER_CONFIG, SERVICE_NAME, ENABLE_JAEGER_TRACING
+import Octopus.bottle.jaeger.jaeger_config as config
 
 # set logger
 LOGGER = logging.getLogger('octopus.jaeger.tracing')
@@ -30,7 +31,7 @@ def get_tracer() -> jaeger_client.Config: # pragma: no cover
     connection to localhost at UDP port 6831
     will be used"""
 
-    LOGGER.info('getting jaeger tracer for service %s', SERVICE_NAME)
+    LOGGER.info('getting jaeger tracer for service %s', config.SERVICE_NAME)
 
     jaeger_config = {
         'sampler': {
@@ -40,15 +41,15 @@ def get_tracer() -> jaeger_client.Config: # pragma: no cover
         'logging': True
     } 
     
-    LOGGER.debug('Creating Jaeger Tracer for %s:%s', JAEGER_CONFIG.jaeger_host, JAEGER_CONFIG.jaeger_port)
+    LOGGER.debug('Creating Jaeger Tracer for %s:%s', config.JAEGER_CONFIG.jaeger_host, config.JAEGER_CONFIG.jaeger_port)
 
     jaeger_config['local_agent'] = {
-        'reporting_host': JAEGER_CONFIG.jaeger_host, 
-        'reporting_port': JAEGER_CONFIG.jaeger_port
+        'reporting_host': config.JAEGER_CONFIG.jaeger_host, 
+        'reporting_port': config.JAEGER_CONFIG.jaeger_port
     }
 
     # create jaeger client config object and return tracer
-    _config = jaeger_client.Config(config=jaeger_config, service_name=SERVICE_NAME, validate=True)
+    _config = jaeger_client.Config(config=jaeger_config, service_name=config.SERVICE_NAME, validate=True)
 
     return _config.initialize_tracer()
 
@@ -95,7 +96,7 @@ def get_active_scope() -> object: # pragma: no cover
 
     """
 
-    if ENABLE_JAEGER_TRACING:
+    if config.ENABLE_JAEGER_TRACING:
         return TRACER.scope_manager.active
 
 # create mappings between request methods and string

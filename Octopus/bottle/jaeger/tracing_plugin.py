@@ -3,12 +3,15 @@ be installed using the bottle.install() method. The plugin
 implements the OpenTracing standard via the Jaeger Tracing
 framework"""
 
+import logging
 
 import bottle
 import pydantic
 
 from Octopus.bottle.jaeger import tracing
-from Octopus.bottle.jaeger.jaeger_config import ENABLE_JAEGER_TRACING, JAEGER_CONFIG, JaegerConfig
+import Octopus.bottle.jaeger.jaeger_config as config
+
+LOGGER = logging.getLogger('otcopus.jaeger.plugin')
 
 
 class JaegerTracing:
@@ -26,16 +29,10 @@ class JaegerTracing:
     
     def __init__(self, jaeger_config: dict = {}):
         
-        global JAEGER_CONFIG
-        
         if jaeger_config:
-            try:
-                JAEGER_CONFIG = JaegerConfig(**jaeger_config)
-                
-            except pydantic.ValidationError as err:
-                LOGGER.exception(err)
-                
-                raise RuntimeError('received invalid config dict for jaeger plugin')
+            config.override_jaeger_config(jaeger_config)
+        
+        LOGGER.debug('applying jaeger tracing with config %s', config.JAEGER_CONFIG)
     
     def setup(self, app: bottle.Bottle):
         """
@@ -72,4 +69,4 @@ class JaegerTracing:
 
         route_name = context['rule']
         
-        return tracing.trace(route_name)(callback) if ENABLE_JAEGER_TRACING else callback
+        return tracing.trace(route_name)(callback) if config.ENABLE_JAEGER_TRACING else callback

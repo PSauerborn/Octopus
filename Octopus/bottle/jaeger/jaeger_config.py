@@ -22,3 +22,19 @@ class JaegerConfig(pydantic.BaseModel):
     jaeger_port: int = 6831
     
 JAEGER_CONFIG = JaegerConfig(jaeger_host=JAEGER_HOST, jaeger_port=JAEGER_PORT)
+
+def override_jaeger_config(jaeger_config: dict):
+    """Helper function used to override
+    config settings"""
+    
+    global JAEGER_CONFIG
+    
+    LOGGER.debug('overriding environment configurations with jaeger config')
+            
+    try:
+        JAEGER_CONFIG = JaegerConfig(**jaeger_config)
+        
+    except pydantic.ValidationError as err:
+        LOGGER.exception(err)
+        
+        raise RuntimeError('received invalid config dict for jaeger plugin')

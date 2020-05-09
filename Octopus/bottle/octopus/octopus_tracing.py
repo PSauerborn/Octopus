@@ -56,7 +56,7 @@ class OctopusDeepMetricPlugin:
             
             LOGGER.info('adding Jaeger Tracing plugin to bottle application')
             
-            app.install(tracing_plugin.JaegerTracing())
+            app.install(tracing_plugin.JaegerTracing(self._jaeger_config))
             
     def apply(self, callback: object, context: bottle.Route):
         """
