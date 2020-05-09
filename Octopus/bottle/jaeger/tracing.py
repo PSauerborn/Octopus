@@ -14,7 +14,7 @@ import requests
 import bottle
 import jaeger_client
 
-from Octopus.bottle.jaeger.jaeger_config import JAEGER_HOST, JAEGER_PORT, SERVICE_NAME, ENABLE_JAEGER_TRACING
+from Octopus.bottle.jaeger.jaeger_config import JAEGER_CONFIG, SERVICE_NAME, ENABLE_JAEGER_TRACING
 
 # set logger
 LOGGER = logging.getLogger('octopus.jaeger.tracing')
@@ -40,9 +40,12 @@ def get_tracer() -> jaeger_client.Config: # pragma: no cover
         'logging': True
     } 
     
-    LOGGER.debug('Creating Jaeger Tracer for %s:%s', JAEGER_HOST, JAEGER_PORT)
+    LOGGER.debug('Creating Jaeger Tracer for %s:%s', JAEGER_CONFIG.jaeger_host, JAEGER_CONFIG.jaeger_port)
 
-    jaeger_config['local_agent'] = {'reporting_host': JAEGER_HOST, 'reporting_port': JAEGER_PORT}
+    jaeger_config['local_agent'] = {
+        'reporting_host': JAEGER_CONFIG.jaeger_host, 
+        'reporting_port': JAEGER_CONFIG.jaeger_port
+    }
 
     # create jaeger client config object and return tracer
     _config = jaeger_client.Config(config=jaeger_config, service_name=SERVICE_NAME, validate=True)

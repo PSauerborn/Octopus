@@ -8,14 +8,8 @@ import bottle
 import pydantic
 
 from Octopus.bottle.jaeger import tracing
-from Octopus.bottle.jaeger.jaeger_config import ENABLE_JAEGER_TRACING
+from Octopus.bottle.jaeger.jaeger_config import ENABLE_JAEGER_TRACING, JAEGER_CONFIG, JaegerConfig
 
-class JaegerConfig(pydantic.BaseModel):
-    """Dataclass used to encapsulate the config settings
-    used by the prometheus plugin"""
-    
-    jaeger_host: int 
-    jaeger_port: str
 
 class JaegerTracing:
     """Bottle plugin for API Tracing. All tracing is done via the 
@@ -30,11 +24,13 @@ class JaegerTracing:
             service name and module name variables
     """
     
-    def __init__(self, jaeger_config: dict = None):
+    def __init__(self, jaeger_config: dict = {}):
         
-        if jaeger_config is not None:
+        global JAEGER_CONFIG
+        
+        if jaeger_config:
             try:
-                config = JaegerConfig(**jaeger_config)
+                JAEGER_CONFIG = JaegerConfig(**jaeger_config)
                 
             except pydantic.ValidationError as err:
                 LOGGER.exception(err)

@@ -10,7 +10,7 @@ from Octopus.bottle.octopus.octopus_config import ENABLE_PROMETHEUS_METRICS, ENA
 LOGGER = logging.getLogger('octopus.metrics.plugin')
 
 
-class OctopusTracing:
+class OctopusDeepMetricPlugin:
     """
     Bottle plugin for the Octopus Plugin, which utilized both
     the Jaeger Tracing and Prometheus Metrics plugin to add
@@ -41,7 +41,7 @@ class OctopusTracing:
         
         for plugin in app.plugins:
             # if instance of Tracing plugin has already been installed, raise exception
-            if isinstance(plugin, OctopusTracing):
+            if isinstance(plugin, OctopusDeepMetricPlugin):
                 raise RuntimeError('Instance of Octopus Tracing Plugin Already Applied to Application')
             
         if ENABLE_PROMETHEUS_METRICS:

@@ -8,7 +8,7 @@ import typing
 
 import bottle 
 
-from Octopus.bottle.prometheus.prometheus_config import ENABLE_PROMETHEUS_METRICS, SERVICE_NAME, PROMETHEUS_MULTIPROC_DIR
+from Octopus.bottle.prometheus.prometheus_config import ENABLE_PROMETHEUS_METRICS, SERVICE_NAME, PROMETHEUS_MULTIPROC_DIR, PROMETHEUS_CONFIG, PrometheusConfig
 
 LOGGER = logging.getLogger('octopus.prometheus.plugin')
 
@@ -27,12 +27,6 @@ if ENABLE_PROMETHEUS_METRICS:
 else:
     LOGGER.info('prometheus metrics are disabled. alter environment variables to enable')
 
-
-class PrometheusConfig(pydantic.BaseModel):
-    """Dataclass used to encapsulate the config settings
-    used by the prometheus plugin"""
-    
-    metrics: typing.List[str] = ['latency', 'request_count', 'processing_requests']
     
 class PrometheusPlugin:
     """Bottle Plugin classed used to add the 
@@ -40,15 +34,19 @@ class PrometheusPlugin:
     
     _config = None
     
-    def __init__(self, prometheus_config: dict):
+    def __init__(self, prometheus_config: dict = {}):
         
-        try:
-            self._config = PrometheusConfig(**prometheus_config)
-            
-        except pydantic.ValidationError as err:
-            LOGGER.exception(err)
-            
-            raise RuntimeError('received invalid config dict for prometheus plugin')
+        global PROMETHEUS_CONFIG
+        
+        if prometheus_config:
+        
+            try:
+                PROMETHEUS_CONFIG = PrometheusConfig(**prometheus_config)
+                
+            except pydantic.ValidationError as err:
+                LOGGER.exception(err)
+                
+                raise RuntimeError('received invalid config dict for prometheus plugin')
     
     def setup(self, app: bottle.Bottle):
         """
@@ -92,7 +90,7 @@ class PrometheusPlugin:
         if not ENABLE_PROMETHEUS_METRICS:
             return callback
         
-        for metric in self._config.metrics:
+        for metric in PROMETHEUS_CONFIG.metrics:
             wrapper = WRAPPER_MAPPINGS.get(metric, None)
             
             if wrapper is not None:

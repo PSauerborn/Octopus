@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
   name='Octopus',
-  version='0.0.2a',
+  version='0.0.3a',
   description='',
   author='Pascal Sauerborn',
   author_email='pascal.sauerborn@gmail.com',
