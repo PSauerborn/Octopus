@@ -10,7 +10,7 @@ from prometheus_client import multiprocess
 
 from Octopus.bottle.prometheus.prometheus_config import ENABLE_PROMETHEUS_METRICS, SERVICE_NAME, PROMETHEUS_MULTIPROC_DIR
 
-logger = logging.getLogger('octopus.prometheus.metrics')
+LOGGER = logging.getLogger('octopus.prometheus.metrics')
 
 ###################################################
 # Define code used to create registry via the proxy
@@ -23,6 +23,8 @@ def get_prometheus_registry():
     registry = prometheus_client.CollectorRegistry()
     
     if PROMETHEUS_MULTIPROC_DIR is not None:
+        LOGGER.debug('using multiprocessing mode with directory %s', PROMETHEUS_MULTIPROC_DIR)
+        
         multiprocess.MultiProcessCollector(registry)
     
     return registry
@@ -45,7 +47,7 @@ REGISTRY = PrometheusRegistryProxy()
 # Define code used to wrap bottle callbacks
 ###########################################
 
-IN_PROGRESS = prometheus_client.Gauge('inprogress_requests', 'number of requests currently being processed', multiprocess_mode='livesum')
+IN_PROGRESS = prometheus_client.Gauge('inprogress_requests', 'number of requests currently being processed', ['service'], multiprocess_mode='livesum')
 REQUEST_COUNT = prometheus_client.Counter('http_requests_total', 'total number of incoming requests', ['method', 'endpoint', 'service'])
 REQUEST_LATENCY = prometheus_client.Histogram('http_request_latency', 'request latency', ['endpoint', 'service'])
 
@@ -53,6 +55,16 @@ def get_prometheus_metrics():
     """Handler function used to retrieve prometheus metrics"""
     
     return prometheus_client.generate_latest(REGISTRY)
+
+def prometheus_in_progress_requests(func: object):
+    """Decorator used to track in progress requests"""
+    def wrapper(*args, **kwargs):
+        
+        with IN_PROGRESS.labels(service=SERVICE_NAME).track_inprogress():
+            result = func(*args, **kwargs)
+            
+        return result
+    return wrapper
     
 def prometheus_request_counter(func: object):
     """Decorator used to increment the prometheus

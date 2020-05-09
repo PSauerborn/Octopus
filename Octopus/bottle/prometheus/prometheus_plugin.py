@@ -21,7 +21,7 @@ if ENABLE_PROMETHEUS_METRICS:
     WRAPPER_MAPPINGS = {
         'latency': prometheus_metrics.prometheus_request_latency,
         'request_count': prometheus_metrics.prometheus_request_counter,
-        'processing_requests': prometheus_metrics.IN_PROGRESS.track_inprogress()
+        'processing_requests': prometheus_metrics.prometheus_in_progress_requests
     }
     
 else:
