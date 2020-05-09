@@ -49,7 +49,7 @@ REGISTRY = PrometheusRegistryProxy()
 
 IN_PROGRESS = prometheus_client.Gauge('inprogress_requests', 'number of requests currently being processed', ['service'], multiprocess_mode='livesum')
 REQUEST_COUNT = prometheus_client.Counter('http_requests_total', 'total number of incoming requests', ['method', 'endpoint', 'service'])
-REQUEST_LATENCY = prometheus_client.Histogram('http_request_latency', 'request latency', ['endpoint', 'service'])
+REQUEST_LATENCY = prometheus_client.Summary('http_request_latency', 'request latency', ['endpoint', 'service'])
 
 def get_prometheus_metrics():
     """Handler function used to retrieve prometheus metrics"""
@@ -83,13 +83,8 @@ def prometheus_request_latency(func: object):
     request counter during each request"""
     def wrapper(*args: tuple, **kwargs: dict):
         
-        start = time.time()
-        
-        result = func(*args, **kwargs)
-        
-        latency = time.time() - start
-        
-        REQUEST_LATENCY.labels(endpoint=bottle.request.path, service=SERVICE_NAME).observe(latency)
+        with REQUEST_LATENCY.labels(endpoint=bottle.request.path, service=SERVICE_NAME).time():
+            result = func(*args, **kwargs)
         
         return result
     return wrapper
