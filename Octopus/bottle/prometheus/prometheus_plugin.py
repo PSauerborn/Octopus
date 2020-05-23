@@ -8,11 +8,14 @@ import typing
 
 import bottle 
 
-from Octopus.bottle.prometheus.prometheus_config import ENABLE_PROMETHEUS_METRICS, SERVICE_NAME, PROMETHEUS_MULTIPROC_DIR, PROMETHEUS_CONFIG, PrometheusConfig
+import Octopus.bottle.prometheus.prometheus_config as config
 
-LOGGER = logging.getLogger('octopus.prometheus.plugin')
 
-if ENABLE_PROMETHEUS_METRICS:
+LOGGER = logging.getLogger('octopus.bottle.prometheus')
+
+# import prometheus metrics module if enabled. Note that this should be done dynamically to avoid creating the
+# prometheus registry if the plugin is not enabled
+if config.ENABLE_PROMETHEUS_METRICS:
     LOGGER.info('applying prometheus metrics to application')
     
     from Octopus.bottle.prometheus import prometheus_metrics
@@ -28,25 +31,18 @@ else:
     LOGGER.info('prometheus metrics are disabled. alter environment variables to enable')
 
     
-class PrometheusPlugin:
+class Prometheus:
     """Bottle Plugin classed used to add the 
-    Prometheus Metric endpoints to an application"""
-    
-    _config = None
+    Prometheus Metric endpoints to an application.
+    The plugin exposes the /metrics route for the 
+    Prometheus server to scrape metrics from. It also
+    decorates the application routes with a collection
+    of metric decorators to measure various performance
+    metrics"""
     
     def __init__(self, prometheus_config: dict = {}):
         
-        global PROMETHEUS_CONFIG
-        
-        if prometheus_config:
-        
-            try:
-                PROMETHEUS_CONFIG = PrometheusConfig(**prometheus_config)
-                
-            except pydantic.ValidationError as err:
-                LOGGER.exception(err)
-                
-                raise RuntimeError('received invalid config dict for prometheus plugin')
+        config.set_prometheus_config(prometheus_config)
     
     def setup(self, app: bottle.Bottle):
         """
@@ -54,17 +50,18 @@ class PrometheusPlugin:
         apply() function has been called. The 
         setup function is used to ensure that the
         Promethes Metric plugin has not already been applied
+        and adds the /metrics route
 
         Arguments:
             app: instance of bottle.Bottle to apply plugin to
         """
         
-        if not ENABLE_PROMETHEUS_METRICS:
+        if not config.ENABLE_PROMETHEUS_METRICS:
             return app
         
         for plugin in app.plugins:
             # if instance of Promethes Metric plugin has already been installed, raise exception
-            if isinstance(plugin, PrometheusPlugin):
+            if isinstance(plugin, Prometheus):
                 raise RuntimeError('Instance of Promethes Metric Plugin Already Applied to Application')
         
         # add metrics route to application
@@ -73,10 +70,10 @@ class PrometheusPlugin:
     def apply(self, callback: object, context: bottle.Route):
         """
         Function used to wrap callback routes in
-        Promethes Metric() decorator. The Promethes Metric decorator
-        extracts spans from request headers (if present)
-        and executes all further request in the context of
-        said spans
+        various prometheus metric decorator(s). The 
+        decorators gather various performance metrics
+        which are stored in the global registry for the
+        prometheus server to scrape
 
         Arguments:
             callback: callback function for API route
@@ -87,10 +84,10 @@ class PrometheusPlugin:
             callback function wrapped in Promethes Metric decorator
         """
         
-        if not ENABLE_PROMETHEUS_METRICS:
+        if not config.ENABLE_PROMETHEUS_METRICS:
             return callback
         
-        for metric in PROMETHEUS_CONFIG.metrics:
+        for metric in config.PROMETHEUS_CONFIG.metrics:
             wrapper = WRAPPER_MAPPINGS.get(metric, None)
             
             if wrapper is not None:

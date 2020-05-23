@@ -5,7 +5,7 @@ traced. If not, the Python requests function is evaluated as normal"""
 
 import requests
 
-from Octopus.bottle.jaeger import tracing
+from Octopus.bottle.jaeger_tracing import tracing
 
 
 def post(url: str, *args: tuple, **kwargs: dict) -> object:

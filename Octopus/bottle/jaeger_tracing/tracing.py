@@ -13,12 +13,12 @@ import opentracing
 import requests
 import bottle
 import jaeger_client
+from jaeger_client.metrics import prometheus
 
-# from Octopus.bottle.jaeger.jaeger_config import JAEGER_CONFIG, SERVICE_NAME, ENABLE_JAEGER_TRACING
-import Octopus.bottle.jaeger.jaeger_config as config
+import Octopus.bottle.jaeger_tracing.jaeger_config as config
 
 # set logger
-LOGGER = logging.getLogger('octopus.jaeger.tracing')
+LOGGER = logging.getLogger('octopus.bottle.jaeger_tracing')
 
 #########################################
 # Define function used to generate tracer
@@ -31,7 +31,7 @@ def get_tracer() -> jaeger_client.Config: # pragma: no cover
     connection to localhost at UDP port 6831
     will be used"""
 
-    LOGGER.info('getting jaeger tracer for service %s', config.SERVICE_NAME)
+    LOGGER.info('getting jaeger tracer for service %s', config.JAEGER_CONFIG.service_name)
 
     jaeger_config = {
         'sampler': {
@@ -41,6 +41,10 @@ def get_tracer() -> jaeger_client.Config: # pragma: no cover
         'logging': True
     } 
     
+    # enable prometheus metrics
+    if config.ENABLE_JAEGER_WITH_PROMETHEUS:
+        config['metrics_factory'] = prometheus.PrometheusMetricsFactory(service_name_label=config.JAEGER_CONFIG.service_name)
+    
     LOGGER.debug('Creating Jaeger Tracer for %s:%s', config.JAEGER_CONFIG.jaeger_host, config.JAEGER_CONFIG.jaeger_port)
 
     jaeger_config['local_agent'] = {
@@ -49,7 +53,7 @@ def get_tracer() -> jaeger_client.Config: # pragma: no cover
     }
 
     # create jaeger client config object and return tracer
-    _config = jaeger_client.Config(config=jaeger_config, service_name=config.SERVICE_NAME, validate=True)
+    _config = jaeger_client.Config(config=jaeger_config, service_name=config.JAEGER_CONFIG.service_name, validate=True)
 
     return _config.initialize_tracer()
 
@@ -255,7 +259,7 @@ def trace(route_name):
 
             # if parent exists, use parent span
             if parent:
-                LOGGER.debug('Tracing - Using Parent Span')
+                LOGGER.debug('tracing route with existing parent jaeger span')
 
                 with TRACER.start_active_span(f'{request_method.upper()} - {route_name}', child_of=parent) as scope:
                     
@@ -272,7 +276,7 @@ def trace(route_name):
 
             # else start new span
             else:
-                LOGGER.debug('Tracing - Creating New Span')
+                LOGGER.debug('tracing route with new jaeger span')
 
                 # create span and evaluate function
                 with TRACER.start_active_span(f'{request_method.upper()} - {route_name}') as scope:

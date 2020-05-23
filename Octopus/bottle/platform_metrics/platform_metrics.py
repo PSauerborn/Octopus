@@ -1,18 +1,21 @@
-"""Octopus plugin that combines prometheus metrics and jaeger tracing
+"""Platform Metrics plugin that combines prometheus metrics and jaeger tracing
 in a single bottle plugin"""
 
 import logging 
+import os
 
 import bottle
 
-from Octopus.bottle.octopus.octopus_config import ENABLE_PROMETHEUS_METRICS, ENABLE_JAEGER_TRACING
+LOGGER = logging.getLogger('octopus.bottle.platform_metrics')
 
-LOGGER = logging.getLogger('octopus.metrics.plugin')
+ENABLE_JAEGER_TRACING = os.environ.get('ENABLE_JAEGER_TRACING', 'false').lower() in ['true', 't']
+ENABLE_PROMETHEUS_METRICS = os.environ.get('ENABLE_PROMETHEUS_METRICS', 'false').lower() in ['true', 't']
+ENABLE_PLATFORM_METRICS = os.environ.get('ENABLE_PLATFORM_METRICS', 'false').lower() in ['true', 't']
 
 
-class Heimdall:
+class PlatformMetrics:
     """
-    Bottle plugin for the Octopus Plugin, which utilized both
+    Bottle plugin for Platform Metrics, which utilizes both
     the Jaeger Tracing and Prometheus Metrics plugin to add
     distributed tracing to any bottle Application. Note that
     the Jaeger Tracing requires a working Jaeger Setup and the 
@@ -22,6 +25,7 @@ class Heimdall:
     Arguments:
         jaeger_config: dict containing jaeger_host, jaeger_port,
             service name and module name variables
+        prometheus_config: dict containing service name and metrics list
     """
     
     def __init__(self, prometheus_config: dict = {}, jaeger_config: dict = {}):
@@ -33,39 +37,43 @@ class Heimdall:
         Function called immediately after the
         apply() function has been called. The 
         setup function is used to ensure that the
-        Tracing plugin has not already been applied
+        PlatformMetrics plugin has not already been applied
+        and then applies both the JaegerTracing and Prometheus
+        plugins
 
         Arguments:
             app: instance of bottle.Bottle to apply plugin to
         """
         
+        if not ENABLE_PLATFORM_METRICS:
+            LOGGER.info('platform metrics plugin is disabled')
+            return
+        
+        LOGGER.info('applying platform metrics plugin')
+        
         for plugin in app.plugins:
             # if instance of Tracing plugin has already been installed, raise exception
-            if isinstance(plugin, Heimdall):
-                raise RuntimeError('Instance of Octopus Tracing Plugin Already Applied to Application')
+            if isinstance(plugin, PlatformMetrics):
+                raise RuntimeError('instance of platform metrics plugin already applied to application')
+        
+        if ENABLE_JAEGER_TRACING:
+            from Octopus.bottle.jaeger_tracing import tracing_plugin
+            
+            LOGGER.info('adding Jaeger Tracing plugin to bottle application')
+            app.install(tracing_plugin.JaegerTracing(self._jaeger_config))
             
         if ENABLE_PROMETHEUS_METRICS:
             from Octopus.bottle.prometheus import prometheus_plugin
             
             LOGGER.info('adding Prometheus Metric plugin to bottle application')
-            
-            app.install(prometheus_plugin.PrometheusPlugin(self._prometheus_config))
-        
-        if ENABLE_JAEGER_TRACING:
-            from Octopus.bottle.jaeger import tracing_plugin
-            
-            LOGGER.info('adding Jaeger Tracing plugin to bottle application')
-            
-            app.install(tracing_plugin.JaegerTracing(self._jaeger_config))
+            app.install(prometheus_plugin.Prometheus(self._prometheus_config))
             
     def apply(self, callback: object, context: bottle.Route):
-        """
-        Function used to wrap callback routes in
-        tracing() decorator. The tracing decorator
-        extracts spans from request headers (if present)
-        and executes all further request in the context of
-        said spans
-
+        """Function used to wrap callbacks. Note that the 
+        callback wrapping is handled by the JaegerTracing
+        and Prometheus plugins, not the PlatformMetrics
+        plugin
+        
         Arguments:
             callback: callback function for API route
             context: bottle.Route object giving Meta

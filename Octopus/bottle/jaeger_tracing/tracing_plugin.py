@@ -8,10 +8,11 @@ import logging
 import bottle
 import pydantic
 
-from Octopus.bottle.jaeger import tracing
-import Octopus.bottle.jaeger.jaeger_config as config
+import Octopus.bottle.jaeger_tracing.jaeger_config as config
 
-LOGGER = logging.getLogger('otcopus.jaeger.plugin')
+from Octopus.bottle.jaeger_tracing import tracing
+
+LOGGER = logging.getLogger('octopus.bottle.jaeger_tracing')
 
 
 class JaegerTracing:
@@ -29,10 +30,7 @@ class JaegerTracing:
     
     def __init__(self, jaeger_config: dict = {}):
         
-        if jaeger_config:
-            config.override_jaeger_config(jaeger_config)
-        
-        LOGGER.debug('applying jaeger tracing with config %s', config.JAEGER_CONFIG)
+        config.set_jaeger_config(jaeger_config)
     
     def setup(self, app: bottle.Bottle):
         """
