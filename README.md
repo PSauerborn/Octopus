@@ -86,6 +86,10 @@ if __name__ == '__main__':
     app.run(host='localhost', port=10999)
 ```
 
+The `Prometheus` plugin also supports a Token Based authentication scheme, that allows
+users to secure the `/metrics` route with an Authorization token defined on the Prometheus
+Server and application
+
 See https://prometheus.io/ for details on Prometheus and its configuration
 
 The plugin supports configuration via a local dictionary object and environment variables,
