@@ -19,6 +19,9 @@ from Octopus.bottle.jaeger_tracing import tracing_plugin
 
 app = bottle.Bottle()
 
+def test('/test):
+    return {'success': True, 'http_code': 200}
+
 if __name__ == '__main__':
 
     jaeger_config = {
@@ -44,6 +47,10 @@ request, allowing spans and traces to be staggered across multiple micro-service
 that the `JaegerTracing` plugin automatically extracts any jaeger spans from the header
 of incoming requests and uses said spans if present
 
+The plugin supports configuration via a local dictionary object and environment variables,
+but it should be noted that environment variables take precedence over local configuration
+settings and will override any of the individual settings set in the local dictionary
+
 #### `Prometheus`
 
 Prometheus is a data aggregation/scraping service that collects and aggregates performance
@@ -64,6 +71,9 @@ from Octopus.bottle.prometheus import prometheus_plugin
 
 app = bottle.Bottle()
 
+def test('/test):
+    return {'success': True, 'http_code': 200}
+
 if __name__ == '__main__':
 
     prometheus_config = {
@@ -77,3 +87,7 @@ if __name__ == '__main__':
 ```
 
 See https://prometheus.io/ for details on Prometheus and its configuration
+
+The plugin supports configuration via a local dictionary object and environment variables,
+but it should be noted that environment variables take precedence over local configuration
+settings and will override any of the individual settings set in the local dictionary
